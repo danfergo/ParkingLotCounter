@@ -108,16 +108,137 @@ int main(int argc, char** argv) {
     for(vector<Vec4i>::iterator it = lines.begin(); it != lines.end(); it++){
         if(Geometry::slopeAngle(*it) == 90){
             horizontalLines.push_back(*it);
-            line(plot2.getMat(), Point((*it)[0], (*it)[1]), Point((*it)[2], (*it)[3]), Scalar(0,0,255), 2, 8 );
+            //line(plot2.getMat(), Point((*it)[0], (*it)[1]), Point((*it)[2], (*it)[3]), Scalar(0,0,255), 2, 8 );
 
         }else{
             verticalLines.push_back(*it);
-            line(plot2.getMat(), Point((*it)[0], (*it)[1]), Point((*it)[2], (*it)[3]), Scalar(0,255,0), 2, 8 );
-            circle( plot2.getMat(), Point( (*it)[0], (*it)[1] ), 5,  Scalar(255,255,0), 1, 5, 0 );
-            circle( plot2.getMat(), Point( (*it)[2], (*it)[3] ), 5,  Scalar(255,255,0), 1, 5, 0 );
+            //line(plot2.getMat(), Point((*it)[0], (*it)[1]), Point((*it)[2], (*it)[3]), Scalar(0,255,0), 2, 8 );
+            //circle( plot2.getMat(), Point( (*it)[0], (*it)[1] ), 5,  Scalar(255,255,0), 1, 5, 0 );
+            //circle( plot2.getMat(), Point( (*it)[2], (*it)[3] ), 5,  Scalar(255,255,0), 1, 5, 0 );
 
         }
     }
+	
+	/*
+	Filtered vectors will contain the new lines obtained from comparing lines that close to each other from horizontalLines and verticalLines
+	auxiliarVec is a vector that will aid the following part of the algorithm
+	current is the line currently being compared to others
+	compared is the line currently being compared to current
+	mean is the mean between values of the lines being compared
+	*/
+	vector<Vec4i> horizontalLinesFiltered, verticalLinesFiltered, auxiliarVec;
+	Vec4i current;
+	Vec4i compared;
+	int mean;
+
+	/*
+	This part of the algorithm picks a line from the vector horizontalLines and compares it to the others
+	It approves a line is close to another if the distance in height between them is below a certain threshold (30 pixels in this case)
+	*/
+	for (int i = 0; i < horizontalLines.size();i++) {
+		current = horizontalLines[i];
+		for (int j = i+1; j < horizontalLines.size();) {
+			compared = horizontalLines[j];
+			if (abs(current[1] - compared[1]) < 30) {
+				auxiliarVec.push_back(compared);
+				horizontalLines.erase(horizontalLines.begin() + j);
+			}
+			else {
+				j++;
+			}
+		}
+
+		//in order to try to eliminate certain false positives we eliminate lines who don't have at least 3 lines close to them
+		if (auxiliarVec.size() > 2) {
+
+			//auxIm is used to obtain the images number of columns (width)
+			Mat auxIm = plot2.getMat();
+
+			//drawing the line and adding it to the filtered vector
+			line(plot2.getMat(), Point(0, current[1]), Point(auxIm.cols, current[3]), Scalar(255, 0, 255), 2, 8);
+			horizontalLinesFiltered.push_back(Vec4i(0, current[1], auxIm.cols, current[3]));
+		}
+
+		//clear the auxiliar vector for the next round of lines being compared
+		auxiliarVec.clear();
+	}
+
+	//clear the auxiliar vector for the next round of lines being compared
+	auxiliarVec.clear();
+
+	/*
+	This part of the algorithm picks a line from the vector verticalLines and compares it to the others
+	It approves a line is close to another if the distance in width between them is below a certain threshold (15 pixels in this case)
+	and if the difference in heigh between their low/high points is below a certain threshold (60 pixels in this case)
+	*/
+	for (int i = 0; i < verticalLines.size(); i++) {
+		current = verticalLines[i];
+		int highPoint = -1;
+		int lowPoint = 999999;
+		//search for the high/low point of the line
+		if (current[1] > highPoint) highPoint = current[1];
+		if (current[3] > highPoint) highPoint = current[3];
+		if (current[1] < lowPoint) lowPoint = current[1];
+		if (current[3] < lowPoint) lowPoint = current[3];
+
+		//clear the auxiliar vector for the next round of lines being compared
+		auxiliarVec.clear();
+
+		for (int j = i + 1; j < verticalLines.size();) {
+			compared = verticalLines[j];
+			int comparedHighPoint = -1;
+			int comparedLowPoint = 999999; 
+			//search for the high/low point of the line
+			if (compared[1] > comparedHighPoint)
+				comparedHighPoint = compared[1];
+			if (compared[3] > comparedHighPoint)
+				comparedHighPoint = compared[3];
+			if (compared[1] < comparedLowPoint)
+				comparedLowPoint = compared[1];
+			if (compared[3] < comparedLowPoint)
+				comparedLowPoint = compared[3];
+
+			//check distances
+			if (abs(current[0] - compared[0]) < 15 && (abs(lowPoint - comparedLowPoint) < 60 || abs(highPoint - comparedHighPoint) < 60)) {
+				int stop = abs(current[0] - compared[0]);
+				auxiliarVec.push_back(compared);
+				verticalLines.erase(verticalLines.begin() + j);
+			}
+			else {
+				j++;
+			}
+		}
+
+
+		mean = current[0];
+		//add to mean and check which of the lines is the tallest
+		for (int k = 0; k < auxiliarVec.size(); k++) {
+			Vec4i aux = auxiliarVec[k];
+			if (aux[1] > highPoint) 
+				highPoint = aux[1];
+			if (aux[3] > highPoint) 
+				highPoint = aux[3];
+			if (aux[1] < lowPoint) 
+				lowPoint = aux[1];
+			if (aux[3] < lowPoint) 
+				lowPoint = aux[3];
+
+			mean += aux[0];
+		}
+
+		//final check on tallness
+		if (current[1] > highPoint) highPoint = current[1];
+		if (current[3] > highPoint) highPoint = current[3];
+		if (current[1] < lowPoint) lowPoint = current[1];
+		if (current[3] < lowPoint) lowPoint = current[3];
+
+		//getting the x coordinate of the new line
+		mean = (int)mean / (auxiliarVec.size() + 1);
+	
+		//drawing the line and adding it to the filtered vector
+		line(plot2.getMat(), Point(mean, current[1]), Point(mean, current[3]), Scalar(0, 0, 0), 2, 8);
+		verticalLinesFiltered.push_back(Vec4i(mean, lowPoint, mean, highPoint));
+	}
 
 
 
