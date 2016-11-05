@@ -123,7 +123,7 @@ int Image::height() {
     return mat.rows;
 }
 
-void Image::fullSobel(Mat image, Mat &dst) {
+void Image::fullSobel(Mat image, Mat &destination) {
     Mat grayScale(image.cols,image.rows, CV_8UC3);
     if(image.channels() == 1){
         grayScale = image;
@@ -151,7 +151,7 @@ void Image::fullSobel(Mat image, Mat &dst) {
     convertScaleAbs( grad_y, abs_grad_y );
 
     /// Total Gradient (approximate)
-    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, dst );
+    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, destination );
 }
 
 void Image::plotHistogramIn(Mat image, Mat &canvas, Scalar color, int channelIdx, int thickness) {
@@ -227,8 +227,8 @@ Image Image::clone() {
     return Image(mat.clone());
 }
 
-Image & Image::canny(int lowTreshold, int highTreshold, int kernelSize, Image & plotIn) {
-    cv::Canny(mat, mat, lowTreshold, highTreshold, kernelSize);
+Image & Image::canny(int lowThreshold, int highThreshold, int apertureSize, Image & plotIn) {
+    cv::Canny(mat, mat, lowThreshold, highThreshold, apertureSize);
     if(&plotIn != &NONE_IMAGE){
        // add(mat, plotIn.getMat(),plotIn.getMat());
     }
