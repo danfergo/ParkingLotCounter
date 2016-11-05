@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( DisplayImage )
+find_package( OpenCV REQUIRED )
+add_executable( DisplayImage main.cpp classes/Image.cpp classes/Image.h classes/Geometry.cpp classes/Geometry.h classes/Util.cpp classes/Util.h)
+target_link_libraries( DisplayImage ${OpenCV_LIBS} )
