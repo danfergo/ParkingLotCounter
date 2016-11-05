@@ -30,6 +30,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
             PERSPECTIVE_SRC_POINTS[(i-1)/2] = Point(intersection[0],intersection[1]);
         }
         clone.wrapPerspective(PERSPECTIVE_SRC_POINTS, PERSPECTIVE_DST_POINTS);
+        warpedPointsReady = true;
         clone.show("Define warp points");
 
     }
@@ -112,7 +113,6 @@ int main(int argc, char** argv) {
         }else{
             verticalLines.push_back(*it);
             line(plot2.getMat(), Point((*it)[0], (*it)[1]), Point((*it)[2], (*it)[3]), Scalar(0,255,0), 2, 8 );
-
             circle( plot2.getMat(), Point( (*it)[0], (*it)[1] ), 5,  Scalar(255,255,0), 1, 5, 0 );
             circle( plot2.getMat(), Point( (*it)[2], (*it)[3] ), 5,  Scalar(255,255,0), 1, 5, 0 );
 
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     for(vector<Vec4i>::iterator it = verticalLines.begin(); it != verticalLines.end(); it++) {
         for (vector<Vec4i>::iterator itt = horizontalLines.begin(); itt != horizontalLines.end(); itt++) {
           Vec2i i =  Geometry::intersect(*it,*itt);
-            int xi = i[0], x1 = min((*it)[0],(*it)[2]), x2 = max((*it)[0],(*it)[2]), x3 = min((*itt)[0],(*itt)[2]), x4 = max((*itt)[0],(*itt)[2]);
+            int xi = i[0], x1 = min((*it)[0],(*it)[0]), x2 = max((*it)[0],(*it)[0]), x3 = min((*itt)[0],(*itt)[0]), x4 = min((*itt)[0],(*itt)[0]);
 
             if(xi >= x1 && xi <= x2 && xi >= x3 && xi <= x4){
                 circle( plot2.getMat(), Point( i[0], i[1] ), 5,  Scalar(255,0,0), 1, 5, 0 );
