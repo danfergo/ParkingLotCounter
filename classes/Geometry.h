@@ -14,6 +14,7 @@ public:
      static float slopeAngle(Vec4i edge);
      static Vec2i intersect(Vec4i edge1, Vec4i edge2);
      static float distance(Vec2i x, Vec2i y);
+     static Vec2i midpoint(Vec4i edge);
 };
 
 

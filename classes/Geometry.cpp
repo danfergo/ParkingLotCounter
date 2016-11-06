@@ -24,3 +24,8 @@ Vec2i Geometry::intersect(Vec4i edge1, Vec4i edge2) {
 float Geometry::distance(Vec2i x, Vec2i y) {
     return sqrt(pow(y[0]-x[0],2) + pow(y[1]-x[1],2));
 }
+
+Vec2i Geometry::midpoint(Vec4i e) {
+    return cv::Vec2i(cvRound((e[0]+e[2])/2), cvRound((e[1]+e[3])/2));
+}
+
